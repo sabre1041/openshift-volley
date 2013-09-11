@@ -101,6 +101,52 @@ public class HttpHeaderParser {
         return entry;
     }
 
+	/**
+	 * Extracts a {@link Cache.Entry} from a {@link NetworkResponse}.
+	 * 
+	 * This method ignores any cache control and uses configured timeouts
+	 *
+	 * @author Joey Yore
+	 * @version 1.0
+	 *
+	 * @param response The {@link NetworkResponse} to parse
+	 * @return A {@link Cache.Entry} for the given response or null
+	 */
+	public static Cache.Entry parseIgnoreCacheHeaders(NetworkResponse response) {
+		long now = System.currentTimeMillis();
+
+		Map<String,String> headers = response.headers;
+		long serverDate = 0;
+		String serverEtag = null;
+		String headerValue;
+
+		headerValue = headers.get("Date");
+		if(headerValue != null) {
+			serverDate = parseDateAsEpoch(headerValue);
+		}
+
+		serverEtag = headers.get("Etag");
+
+		// cache hit, but refreshed on backend
+		final long cacheHitButRefreshed = 3*60*1000;
+		
+		//cahce expires completely
+		final long cacheExpired = 24*60*1000;
+
+		final long softExpire = now + cacheHitButRefreshed;
+		final long ttl = now + cacheExpired;
+
+		Cache.Entry entry = new Cache.Entry();
+		entry.data = response.data;
+		entry.etag = serverEtag;
+		entry.softTtl = softExpire;
+		entry.ttl = ttl;
+		entry.serverDate = serverDate;
+		entry.responseHeaders = headers;
+
+		return entry;
+	}
+
     /**
      * Parse date in RFC1123 format, and return its value as epoch
      */

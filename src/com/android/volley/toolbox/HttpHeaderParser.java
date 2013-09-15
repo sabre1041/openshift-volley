@@ -127,11 +127,15 @@ public class HttpHeaderParser {
 
 		serverEtag = headers.get("Etag");
 
-		// cache hit, but refreshed on backend
-		final long cacheHitButRefreshed = 3*60*1000;
+		// cache hit, but refreshed on backend (0)
+		// This is zero to force a refresh each time.
+		// We set the actual TTL later to make sure that
+		// we keep the data. So, old data will be usable
+		// and get updated immediately
+		final long cacheHitButRefreshed = 0;
 		
-		//cahce expires completely
-		final long cacheExpired = 24*60*1000;
+		//cahce expires completely (1 day)
+		final long cacheExpired = 86400000;
 
 		final long softExpire = now + cacheHitButRefreshed;
 		final long ttl = now + cacheExpired;
